@@ -59,4 +59,4 @@ if %ERRORLEVEL% neq 0 (
 
 echo.
 echo Deployment complete. Your site should be available at:
-echo https://%GITHUB_USER%.github.io
+echo https://%GITHUB_USER%.github.io
