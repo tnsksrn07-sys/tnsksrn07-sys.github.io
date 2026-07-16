@@ -685,25 +685,33 @@ Request Type: Withdrawal Verification Request`)}`,target:"_blank",rel:"noopener 
 (() => {
   const originalFetch = window.fetch;
   
-  const getMockDB = async () => {
-    try {
-      const res = await originalFetch('https://jsonblob.com/api/jsonBlob/019f6bcb-c3ce-75a0-8ba1-008108fd3b65');
-      if (res.ok) {
-        const db = await res.json();
-        if (db && db.clients) return db;
-      }
-    } catch(e) {
-      console.warn("Failed to load from cloud DB, falling back to localStorage", e);
-    }
-    try {
-      const dbStr = localStorage.getItem("static_mock_db");
-      if (dbStr) {
-        const parsed = JSON.parse(dbStr);
-        if (parsed && parsed.clients) return parsed;
-      }
-    } catch(e) {}
+  let firebaseApp = null;
+  let firestoreDb = null;
+  let firebaseInitialized = false;
+
+  const initFirebase = async () => {
+    if (firebaseInitialized) return;
+    firebaseInitialized = true;
     
-    const initialDB = {
+    const config = window.FIREBASE_CONFIG;
+    if (!config || !config.apiKey || config.apiKey.includes("PLACEHOLDER")) {
+      console.warn("Firebase credentials are not configured in config.js. Falling back to local storage database mock.");
+      return;
+    }
+
+    try {
+      const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+      const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+      firebaseApp = initializeApp(config);
+      firestoreDb = getFirestore(firebaseApp);
+      console.log("Firebase Firestore successfully initialized!");
+    } catch (e) {
+      console.error("Failed to initialize Firebase SDK:", e);
+    }
+  };
+
+  const getInitialDB = () => {
+    return {
       clients: [
         {
           id: "NXBTABC123",
@@ -750,20 +758,58 @@ Request Type: Withdrawal Verification Request`)}`,target:"_blank",rel:"noopener 
         }
       ]
     };
+  };
+
+  const getMockDB = async () => {
+    await initFirebase();
+    if (firestoreDb) {
+      try {
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const docRef = doc(firestoreDb, "nxtbillion_data", "db");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const db = docSnap.data();
+          if (db && db.clients) {
+            localStorage.setItem("static_mock_db", JSON.stringify(db));
+            return db;
+          }
+        } else {
+          console.log("No database document found in Firestore. Creating new one with initial data.");
+          const initialDB = getInitialDB();
+          await saveMockDB(initialDB);
+          return initialDB;
+        }
+      } catch (e) {
+        console.warn("Failed to load from Firebase Firestore, falling back to localStorage", e);
+      }
+    }
+    
+    try {
+      const dbStr = localStorage.getItem("static_mock_db");
+      if (dbStr) {
+        const parsed = JSON.parse(dbStr);
+        if (parsed && parsed.clients) return parsed;
+      }
+    } catch(e) {}
+    
+    const initialDB = getInitialDB();
     localStorage.setItem("static_mock_db", JSON.stringify(initialDB));
     return initialDB;
   };
   
-  const saveMockDB = (db) => {
+  const saveMockDB = async (db) => {
     localStorage.setItem("static_mock_db", JSON.stringify(db));
-    originalFetch('https://jsonblob.com/api/jsonBlob/019f6bcb-c3ce-75a0-8ba1-008108fd3b65', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(db)
-    }).catch(e => console.error("Cloud DB sync failed:", e));
+    await initFirebase();
+    if (firestoreDb) {
+      try {
+        const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        const docRef = doc(firestoreDb, "nxtbillion_data", "db");
+        await setDoc(docRef, db);
+        console.log("Database state successfully synchronized with Firebase cloud!");
+      } catch (e) {
+        console.error("Failed to sync database with Firebase cloud:", e);
+      }
+    }
   };
 
   const handleMockRequest = async (url, options) => {
