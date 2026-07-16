@@ -133,7 +133,7 @@ app.delete('/api/clients/:id', (req, res) => {
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
   const db = readDB();
-  const client = db.clients.find(c => 
+  const client = db.clients.find(c =>
     (c.email.toLowerCase() === email.toLowerCase() || (c.username && c.username.toLowerCase() === email.toLowerCase())) &&
     c.password === password
   );
