@@ -1,10 +1,10 @@
 // Firebase Configuration for Next Billion Technology Global Database Sync
-// Replace these placeholders with your actual Firebase project credentials.
 window.FIREBASE_CONFIG = {
-  apiKey: "PLACEHOLDER_API_KEY",
-  authDomain: "PLACEHOLDER_PROJECT_ID.firebaseapp.com",
-  projectId: "PLACEHOLDER_PROJECT_ID",
-  storageBucket: "PLACEHOLDER_PROJECT_ID.appspot.com",
-  messagingSenderId: "PLACEHOLDER_SENDER_ID",
-  appId: "PLACEHOLDER_APP_ID"
+  apiKey: "AIzaSyDNvAml0H1tEqWgz-vLnPCd9Tzu3sG600U",
+  authDomain: "nxtblntech.firebaseapp.com",
+  projectId: "nxtblntech",
+  storageBucket: "nxtblntech.firebasestorage.app",
+  messagingSenderId: "141834783456",
+  appId: "1:141834783456:web:20862c18fc00cd6d8d9e85",
+  measurementId: "G-XNVL1GBGPH"
 };
