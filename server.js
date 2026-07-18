@@ -241,14 +241,20 @@ app.post('/api/send-otp', async (req, res) => {
 
 // Serve config.js
 app.get('/config.js', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.sendFile(path.join(__dirname, 'config.js'));
 });
 
 // Serve frontend assets
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/assets', express.static(path.join(__dirname, 'assets'), {
+  etag: true,
+  lastModified: true,
+  maxAge: '1d'
+}));
 
 // Catch-all route to serve index.html
 app.get('*', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
