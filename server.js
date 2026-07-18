@@ -239,6 +239,11 @@ app.post('/api/send-otp', async (req, res) => {
   }
 });
 
+// Serve config.js
+app.get('/config.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'config.js'));
+});
+
 // Serve frontend assets
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
